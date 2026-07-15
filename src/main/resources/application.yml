@@ -12,9 +12,9 @@ spring:
       ddl-auto: validate
     properties:
       hibernate:
+        default_schema: shopverse
         jdbc:
           time_zone: UTC
-          default_schema: shopverse
 
   flyway:
     enabled: true
