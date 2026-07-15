@@ -1,0 +1,21 @@
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  docker:
+    compose:
+      enabled: false
+
+  jpa:
+    show-sql: false
+
+  flyway:
+    locations:
+      - classpath:db/migration
+      - classpath:db/test-migration
+
+logging:
+  level:
+    org.flywaydb.core: INFO
+    org.hibernate.SQL: INFO

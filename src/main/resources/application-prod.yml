@@ -1,0 +1,21 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  docker:
+    compose:
+      enabled: false
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    org.flywaydb.core: INFO
+    org.hibernate.SQL: INFO

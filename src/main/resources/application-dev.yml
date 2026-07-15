@@ -1,0 +1,21 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  docker:
+    compose:
+      enabled: true
+
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/${POSTGRES_DB:shopverse_db}
+    username: ${POSTGRES_USER:shopverse_user}
+    password: ${POSTGRES_PASSWORD:shopverse_password}
+
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    org.flywaydb.core: INFO
+    org.hibernate.SQL: DEBUG
