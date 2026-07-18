@@ -1,0 +1,12 @@
+package com.shopverse.shared.web.error;
+
+public enum ApiErrorCode {
+
+    VALIDATION_FAILED,
+    MALFORMED_REQUEST,
+    METHOD_NOT_ALLOWED,
+    UNSUPPORTED_MEDIA_TYPE,
+    RESOURCE_NOT_FOUND,
+    REQUEST_REJECTED,
+    INTERNAL_SERVER_ERROR
+}
