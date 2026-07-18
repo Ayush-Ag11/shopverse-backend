@@ -1,5 +1,9 @@
 package com.shopverse.shared.web.error;
 
+import com.shopverse.shared.exception.BusinessRuleViolationException;
+import com.shopverse.shared.exception.ResourceConflictException;
+import com.shopverse.shared.exception.ResourceNotFoundException;
+import com.shopverse.shared.exception.ShopVerseException;
 import com.shopverse.shared.web.CorrelationId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,6 +111,31 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         );
     }
 
+    @ExceptionHandler(ShopVerseException.class)
+    protected ResponseEntity<Object> handleShopVerseException(
+        ShopVerseException exception,
+        WebRequest request
+    ) {
+        ExceptionDefinition definition =
+            resolveExceptionDefinition(exception);
+
+        ProblemDetail problemDetail =
+            ProblemDetail.forStatusAndDetail(
+                definition.status(),
+                exception.getMessage()
+            );
+
+        problemDetail.setTitle(definition.title());
+
+        return handleExceptionInternal(
+            exception,
+            problemDetail,
+            new HttpHeaders(),
+            definition.status(),
+            request
+        );
+    }
+
     @ExceptionHandler(Exception.class)
     protected ResponseEntity<Object> handleUnexpectedException(
         Exception exception,
@@ -198,6 +227,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         Exception exception,
         HttpStatusCode statusCode
     ) {
+        if (exception instanceof ShopVerseException shopVerseException) {
+            return resolveExceptionDefinition(
+                shopVerseException
+            ).errorCode();
+        }
+
         if (exception instanceof MethodArgumentNotValidException) {
             return ApiErrorCode.VALIDATION_FAILED;
         }
@@ -273,5 +308,45 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         }
 
         return java.util.Optional.empty();
+    }
+
+    private ExceptionDefinition resolveExceptionDefinition(
+        ShopVerseException exception
+    ) {
+        if (exception instanceof ResourceNotFoundException) {
+            return new ExceptionDefinition(
+                HttpStatus.NOT_FOUND,
+                "Resource not found",
+                ApiErrorCode.RESOURCE_NOT_FOUND
+            );
+        }
+
+        if (exception instanceof ResourceConflictException) {
+            return new ExceptionDefinition(
+                HttpStatus.CONFLICT,
+                "Resource conflict",
+                ApiErrorCode.RESOURCE_CONFLICT
+            );
+        }
+
+        if (exception instanceof BusinessRuleViolationException) {
+            return new ExceptionDefinition(
+                HttpStatus.UNPROCESSABLE_CONTENT,
+                "Business rule violation",
+                ApiErrorCode.BUSINESS_RULE_VIOLATION
+            );
+        }
+
+        throw new IllegalStateException(
+            "Unsupported ShopVerse exception type: "
+                + exception.getClass().getName()
+        );
+    }
+
+    private record ExceptionDefinition(
+        HttpStatus status,
+        String title,
+        ApiErrorCode errorCode
+    ) {
     }
 }
