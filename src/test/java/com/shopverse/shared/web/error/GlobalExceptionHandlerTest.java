@@ -1,5 +1,8 @@
 package com.shopverse.shared.web.error;
 
+import com.shopverse.shared.exception.BusinessRuleViolationException;
+import com.shopverse.shared.exception.ResourceConflictException;
+import com.shopverse.shared.exception.ResourceNotFoundException;
 import com.shopverse.shared.web.CorrelationId;
 import com.shopverse.shared.web.RequestCorrelationFilter;
 import jakarta.validation.Valid;
@@ -183,6 +186,112 @@ class GlobalExceptionHandlerTest {
             );
     }
 
+    @Test
+    void shouldReturnResourceNotFoundProblem() throws Exception {
+        mockMvc.perform(
+                get("/test/api/not-found")
+                    .header(
+                        CorrelationId.HEADER_NAME,
+                        "not-found-test-001"
+                    )
+            )
+            .andExpect(status().isNotFound())
+            .andExpect(
+                jsonPath("$.title")
+                    .value("Resource not found")
+            )
+            .andExpect(
+                jsonPath("$.status")
+                    .value(404)
+            )
+            .andExpect(
+                jsonPath("$.code")
+                    .value("RESOURCE_NOT_FOUND")
+            )
+            .andExpect(
+                jsonPath("$.detail")
+                    .value(
+                        "Product with id 'product-101' was not found."
+                    )
+            )
+            .andExpect(
+                jsonPath("$.correlationId")
+                    .value("not-found-test-001")
+            )
+            .andExpect(
+                jsonPath("$.instance")
+                    .value("/test/api/not-found")
+            );
+    }
+
+    @Test
+    void shouldReturnResourceConflictProblem() throws Exception {
+        mockMvc.perform(
+                get("/test/api/conflict")
+                    .header(
+                        CorrelationId.HEADER_NAME,
+                        "conflict-test-001"
+                    )
+            )
+            .andExpect(status().isConflict())
+            .andExpect(
+                jsonPath("$.title")
+                    .value("Resource conflict")
+            )
+            .andExpect(
+                jsonPath("$.status")
+                    .value(409)
+            )
+            .andExpect(
+                jsonPath("$.code")
+                    .value("RESOURCE_CONFLICT")
+            )
+            .andExpect(
+                jsonPath("$.detail")
+                    .value(
+                        "A customer with this email already exists."
+                    )
+            )
+            .andExpect(
+                jsonPath("$.correlationId")
+                    .value("conflict-test-001")
+            );
+    }
+
+    @Test
+    void shouldReturnBusinessRuleViolationProblem() throws Exception {
+        mockMvc.perform(
+                get("/test/api/business-rule")
+                    .header(
+                        CorrelationId.HEADER_NAME,
+                        "business-rule-test-001"
+                    )
+            )
+            .andExpect(status().is(422))
+            .andExpect(
+                jsonPath("$.title")
+                    .value("Business rule violation")
+            )
+            .andExpect(
+                jsonPath("$.status")
+                    .value(422)
+            )
+            .andExpect(
+                jsonPath("$.code")
+                    .value("BUSINESS_RULE_VIOLATION")
+            )
+            .andExpect(
+                jsonPath("$.detail")
+                    .value(
+                        "An empty cart cannot be checked out."
+                    )
+            )
+            .andExpect(
+                jsonPath("$.correlationId")
+                    .value("business-rule-test-001")
+            );
+    }
+
     @RestController
     @RequestMapping("/test/api")
     public static class ApiErrorTestController {
@@ -198,6 +307,27 @@ class GlobalExceptionHandlerTest {
         String unexpected() {
             throw new IllegalStateException(
                 "Sensitive internal implementation information"
+            );
+        }
+
+        @GetMapping("/not-found")
+        String notFound() {
+            throw new ResourceNotFoundException(
+                "Product with id 'product-101' was not found."
+            );
+        }
+
+        @GetMapping("/conflict")
+        String conflict() {
+            throw new ResourceConflictException(
+                "A customer with this email already exists."
+            );
+        }
+
+        @GetMapping("/business-rule")
+        String businessRuleViolation() {
+            throw new BusinessRuleViolationException(
+                "An empty cart cannot be checked out."
             );
         }
     }
